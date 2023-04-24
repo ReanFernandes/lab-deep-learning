@@ -1,0 +1,7 @@
+gym[box2d]==0.21.0
+torch==1.11.0
+numpy==1.21.6
+tensorboard==1.15.0
+matplotlib==3.5.1
+protobuf==3.20
+pyglet==1.5.27
