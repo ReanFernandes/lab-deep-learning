@@ -26,8 +26,13 @@ def action_to_id(a):
     elif all(a == [0.0, 0.0, 0.2]): return BRAKE             # BRAKE: 4
     else:       
         return STRAIGHT                                      # STRAIGHT = 0
-
-
+    # throws error saying truth value is ambiguous, trying other way 
+    # if np.array_equal(a, np.array([-1.0, 0.0, 0.0])): return LEFT               
+    # elif np.array_equal(a, np.array([1.0, 0.0, 0.0])): return RIGHT             
+    # elif np.array_equal(a, np.array([0.0, 1.0, 0.0])): return ACCELERATE        
+    # elif np.array_equal(a, np.array([0.0, 0.0, 0.2])): return BRAKE             
+    # else:       
+    #     return STRAIGHT           
 def id_to_action(action_id, max_speed=0.8):
     """ 
     this method makes actions continous.
