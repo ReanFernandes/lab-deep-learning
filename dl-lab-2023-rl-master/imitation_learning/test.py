@@ -8,7 +8,7 @@ import numpy as np
 import gym
 import os
 import json
-
+import torch
 from agent.bc_agent import BCAgent
 from utils import *
 
@@ -19,7 +19,12 @@ def run_episode(env, agent, rendering=True, max_timesteps=1000):
     step = 0
 
     state = env.reset()
-    
+    # start of the episode, I will create a queue of entries according to history. The stack will have the first h-1 frames as blank screen, and 
+    # remaining states will be appended to the queue as they come.
+    state = rgb2gray(state)
+    blank_frame = np.zeros_like(state)
+    #concatenate along new axis to create a stack of frames
+    state_array = np.concatenate([blank_frame[np.newaxis, ...] for _ in range(agent.history_length-1)] + [state[np.newaxis, ...]], axis=0)
     # fix bug of curropted states without rendering in racingcar gym environment
     env.viewer.window.dispatch_events() 
 
@@ -27,8 +32,9 @@ def run_episode(env, agent, rendering=True, max_timesteps=1000):
         
         # TODO: preprocess the state in the same way than in your preprocessing in train_agent.py
         #    state = ...
-
-        
+        state = state_array.reshape((1,agent.history_length  , 96, 96))
+        a = agent._get_predictions(agent.predict(state))
+        a = id_to_action(a)
         # TODO: get the action from your agent! You need to transform the discretized actions to continuous
         # actions.
         # hints:
@@ -39,7 +45,8 @@ def run_episode(env, agent, rendering=True, max_timesteps=1000):
 
         next_state, r, done, info = env.step(a)   
         episode_reward += r       
-        state = next_state
+        # append the next state to the state_queue
+        state_array= np.concatenate([state_array[1:], rgb2gray(next_state)[np.newaxis,...]], axis=0)
         step += 1
         
         if rendering:
@@ -61,7 +68,11 @@ if __name__ == "__main__":
     # TODO: load agent
     # agent = BCAgent(...)
     # agent.load("models/bc_agent.pt")
-
+    history_length = 4
+    batch_size = 16
+    lr = 1e-4
+    agent = BCAgent(history_length=history_length, batch_size=batch_size, lr=lr)
+    agent.load("/home/rean/lab-deep-learning/models/test_agent_b32_h4.pt")
     env = gym.make('CarRacing-v0').unwrapped
 
     episode_rewards = []
@@ -75,7 +86,7 @@ if __name__ == "__main__":
     results["mean"] = np.array(episode_rewards).mean()
     results["std"] = np.array(episode_rewards).std()
  
-    fname = "results/results_bc_agent-%s.json" % datetime.now().strftime("%Y%m%d-%H%M%S")
+    fname = "/home/rean/lab-deep-learning/results/results_bc_agent-%s.json" % datetime.now().strftime("%Y%m%d-%H%M%S")
     fh = open(fname, "w")
     json.dump(results, fh)
             

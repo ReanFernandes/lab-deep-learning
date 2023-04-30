@@ -30,7 +30,7 @@ class CNN(nn.Module):
 
     def forward(self, x):
         # make sure data has the correct dimensions
-        x = x.view(self.batch_size, self.num_channels, 96, 96)
+        # x = x.view(-1, self.num_channels, 96, 96)
         x = self.relu(self.conv1(x))
         x = self.relu(self.conv2(x))
         x = self.relu(self.conv3(x))

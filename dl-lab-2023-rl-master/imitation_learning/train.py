@@ -103,17 +103,23 @@ def train_model(X_train, y_train, X_valid, n_minibatches, batch_size, lr, model_
         
         # update
         loss = agent.update(X_batch_train, y_batch_train)
-        print(i)
+        
         if i % 25 == 0:
             # sample from validation batch and get validation monitors
-            X_batch_valid, y_batch_valid = sample_minibatch(X_valid, y_valid, batch_idx_validation, batch_size)
-            valid_accuracy, valid_loss = agent.get_accuracy_and_loss(X_batch_valid, y_batch_valid)
-            
+            valid_accuracy_buffer = 0
+            valid_loss_buffer = 0
+            for j in range(X_valid.shape[0]):
+                X_batch_valid, y_batch_valid = sample_minibatch(X_valid, y_valid, batch_idx_validation, batch_size)
+                valid_accuracy, valid_loss = agent.get_accuracy_and_loss(X_batch_valid, y_batch_valid)
+                valid_accuracy_buffer += valid_accuracy
+                valid_loss_buffer += valid_loss
+            valid_loss = valid_loss_buffer / X_valid.shape[0]
+            valid_accuracy = valid_accuracy_buffer / X_valid.shape[0]    
             #use preexisting x_batch_train and y_batch_train to get training monitors
             training_accuracy, training_loss = agent.get_accuracy_and_loss(X_batch_train, y_batch_train)
 
             # write to tensorboard
-            eval_dict = {"Training loss": training_loss.item,
+            eval_dict = {"Training loss": training_loss.data,
                          "Training accuracy": training_accuracy,
                          "Validation loss": valid_loss.data,
                          "Validation accuracy": valid_accuracy}
@@ -121,22 +127,26 @@ def train_model(X_train, y_train, X_valid, n_minibatches, batch_size, lr, model_
             # tensorboard_eval.write_episode_data(i, eval_dict)
 
 
+    #add  evaluation data in text file for later plotting without overwriting
+    with open("eval_data.txt", "a") as myfile:
 
+        myfile.write( "Batch size: " + str(batch_size) + " History length: " + str(history_length) + str(eval_dict) + "\n")
 
     # TODO: save your agent
-    model_dir = agent.save(os.path.join(model_dir, "test_agent.pt"))
+    model_dir = agent.save(os.path.join(model_dir, "test_agent_b" + str(batch_size) + "_h" + str(history_length) + ".pt"))
     print("Model saved in file: %s" % model_dir)
 
 
 if __name__ == "__main__":
     # read data    
     X_train, y_train, X_valid, y_valid = read_data("./data")
-    history_length = 1
-    batch_size = 10
-    n_minibatches = X_train.shape[0] // batch_size
-    # preprocess data
-    X_train, y_train, X_valid, y_valid = preprocessing(X_train, y_train, X_valid, y_valid,history_length=history_length)
-
-    # train model (you can change the parameters!)
-    train_model(X_train, y_train, X_valid, n_minibatches=n_minibatches, batch_size=batch_size, lr=1e-4)
- 
+    history_length = [1, 4, 8]
+    batch_size = [ 16, 32, 64, 128]
+    # for some reason the code breaks after changing the history length. If i have the time, I will fix it. Currently i just erase whichever value is completed from the history length list
+    for history_length in history_length:
+        X_train, y_train, X_valid, y_valid = preprocessing(X_train, y_train, X_valid, y_valid,history_length=history_length)
+        for batch_size in batch_size:
+            n_minibatches = X_train.shape[0] // batch_size
+            # train model (you can change the parameters!)
+            train_model(X_train, y_train, X_valid, n_minibatches=n_minibatches, batch_size=batch_size, lr=1e-4)
+        

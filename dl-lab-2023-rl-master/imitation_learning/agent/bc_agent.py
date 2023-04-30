@@ -3,10 +3,14 @@ from agent.networks import CNN
 import torch.nn.functional as F
 class BCAgent:
     
-    def __init__(self,history_length, output_classes, batch_size, lr):
+    def __init__(self,history_length, batch_size, lr,output_classes =4):
         # TODO: Define network, loss function, optimizer
+        self.history_length = history_length
+        self.output_classes = output_classes
+        self.batch_size = batch_size
+        self.lr = lr
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.net = CNN(history_length, output_classes, batch_size).to(self.device)
+        self.net = CNN(self.history_length, self.output_classes, self.batch_size).to(self.device)
         self.loss = torch.nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=lr)
         
