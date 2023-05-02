@@ -12,11 +12,17 @@ class ReplayBuffer:
     def __init__(self):
         self._data = namedtuple("ReplayBuffer", ["states", "actions", "next_states", "rewards", "dones"])
         self._data = self._data(states=[], actions=[], next_states=[], rewards=[], dones=[])
-
+        self.capacity = 1e6
     def add_transition(self, state, action, next_state, reward, done):
         """
         This method adds a transition to the replay buffer.
         """
+        if len(self._data.states) >= self.capacity:
+            self._data.states.pop(0)
+            self._data.actions.pop(0)
+            self._data.next_states.pop(0)
+            self._data.rewards.pop(0)
+            self._data.dones.pop(0)
         self._data.states.append(state)
         self._data.actions.append(action)
         self._data.next_states.append(next_state)

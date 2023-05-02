@@ -49,7 +49,7 @@ def train_online(env, agent, num_episodes, model_dir="./models_cartpole", tensor
  
     print("... train agent")
 
-    tensorboard = Evaluation(os.path.join(tensorboard_dir, "train"), ["episode_reward", "a_0", "a_1"])
+    tensorboard = Evaluation(os.path.join(tensorboard_dir, "train"),"DQN_train_cartpole", ["episode_reward", "a_0", "a_1"])
 
     # training
     for i in range(num_episodes):
@@ -62,9 +62,12 @@ def train_online(env, agent, num_episodes, model_dir="./models_cartpole", tensor
         # TODO: evaluate your agent every 'eval_cycle' episodes using run_episode(env, agent, deterministic=True, do_training=False) to 
         # check its performance with greedy actions only. You can also use tensorboard to plot the mean episode reward.
         # ...
-        # if i % eval_cycle == 0:
-        #    for j in range(num_eval_episodes):
-        #       ...
+        if i % eval_cycle == 0:
+           for j in range(num_eval_episodes):
+                stats = run_episode(env, agent, deterministic=True, do_training=False)
+                tensorboard.write_episode_data(i, eval_dict={  "episode_reward" : stats.episode_reward, 
+                                                                 "a_0" : stats.get_action_usage(0),
+                                                                 "a_1" : stats.get_action_usage(1)})
         
         # store model.
         if i % eval_cycle == 0 or i >= (num_episodes - 1):
@@ -91,4 +94,9 @@ if __name__ == "__main__":
     # 1. init Q network and target network (see dqn/networks.py)
     # 2. init DQNAgent (see dqn/dqn_agent.py)
     # 3. train DQN agent with train_online(...)
+
+    Q = MLP(state_dim, num_actions)
+    Q_target = MLP(state_dim, num_actions)
+    agent = DQNAgent(Q,Q_target, num_actions)
+    train_online(env, agent, num_episodes=100)
  

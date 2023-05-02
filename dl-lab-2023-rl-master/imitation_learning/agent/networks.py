@@ -31,6 +31,9 @@ class CNN(nn.Module):
     def forward(self, x):
         # make sure data has the correct dimensions
         # x = x.view(-1, self.num_channels, 96, 96)
+        #check if data tensor is on device
+        if not torch.is_tensor(x):
+            x = torch.from_numpy(x).float().to(self.device)
         x = self.relu(self.conv1(x))
         x = self.relu(self.conv2(x))
         x = self.relu(self.conv3(x))

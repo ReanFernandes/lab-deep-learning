@@ -18,16 +18,23 @@ class BCAgent:
     def update(self, X_batch, y_batch):
         # TODO: transform input to tensors
         # TODO: forward + backward + optimize
-        
-        X_batch = torch.from_numpy(X_batch).to(self.device)
-        y_batch = torch.from_numpy(y_batch).to(self.device)
+        #check if inputs are tensor, because in training i convert them to tensors
+        if not torch.is_tensor(X_batch):
+            X_batch = torch.from_numpy(X_batch).to(self.device)
+        if not torch.is_tensor(y_batch):
+            y_batch = torch.from_numpy(y_batch).to(self.device)
+        # zero the parameter gradients
         self.optimizer.zero_grad()
+        
         # forward pass
         output = self.net.forward(X_batch)
-
+        
+        # calculate loss
         loss = self.loss(output, y_batch)
+        
         # backward pass
         loss.backward()
+        
         # optimize
         self.optimizer.step()
 
@@ -35,7 +42,8 @@ class BCAgent:
 
     def predict(self, X):
         # TODO: forward pass
-        X = torch.from_numpy(X).float().to(self.device)
+        if not torch.is_tensor(X):
+            X = torch.from_numpy(X).float().to(self.device)
         outputs = self.net(X)
         return outputs
     
@@ -49,7 +57,8 @@ class BCAgent:
         # output_distro = self.predict(input_data)
         with torch.no_grad():
             output_distro = self.predict(input_data)
-            truth_labels = torch.from_numpy(truth_labels).to(self.device)
+            if not torch.is_tensor(truth_labels):
+                truth_labels = torch.from_numpy(truth_labels).to(self.device)
             predictions = self._get_predictions(output_distro)
             accuracy = torch.mean(predictions.eq(truth_labels).float())
             loss = self.loss(output_distro, truth_labels)
