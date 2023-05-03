@@ -49,12 +49,10 @@ class BCAgent:
     
     def _get_predictions(self, output_distro):
         # gets the predicted labels from the output distribution, output distro will be (batch_size, output_classes)
-        
         return torch.argmax(output_distro, dim=1)
         
     def get_accuracy_and_loss(self, input_data, truth_labels):
         # calculates the accuracy and loss of the model on the given data
-        # output_distro = self.predict(input_data)
         with torch.no_grad():
             output_distro = self.predict(input_data)
             if not torch.is_tensor(truth_labels):

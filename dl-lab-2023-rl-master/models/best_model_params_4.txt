@@ -1,0 +1,1 @@
+{"lr": 0.0001, "batch_size": 128, "num_epochs": 50, "history_length": 1, "Best Reward": 821.0048196248048}

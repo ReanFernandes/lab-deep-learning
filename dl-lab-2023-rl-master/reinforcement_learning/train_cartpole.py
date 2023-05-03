@@ -10,7 +10,7 @@ from agent.networks import MLP
 from utils import EpisodeStats
 
 
-def run_episode(env, agent, deterministic, do_training=True, rendering=False, max_timesteps=1000):
+def run_episode(env, agent, deterministic, do_training=True, rendering=False, max_timesteps=2000):
     """
     This methods runs one episode for a gym environment. 
     deterministic == True => agent executes only greedy actions according the Q function approximator (no random actions).
@@ -97,6 +97,6 @@ if __name__ == "__main__":
 
     Q = MLP(state_dim, num_actions)
     Q_target = MLP(state_dim, num_actions)
-    agent = DQNAgent(Q,Q_target, num_actions)
+    agent = DQNAgent(Q,Q_target, num_actions,batch_size=128)
     train_online(env, agent, num_episodes=100)
  

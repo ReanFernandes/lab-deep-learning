@@ -12,7 +12,7 @@ from agent.dqn_agent import DQNAgent
 from agent.networks import CNN
 
 
-def run_episode(env, agent, deterministic, skip_frames=0,  do_training=True, rendering=False, max_timesteps=1000, history_length=0):
+def run_episode(env, agent, deterministic, skip_frames=3,  do_training=True, rendering=False, max_timesteps=1000, history_length=0):
     """
     This methods runs one episode for a gym environment. 
     deterministic == True => agent executes only greedy actions according the Q function approximator (no random actions).
@@ -81,7 +81,7 @@ def train_online(env, agent, num_episodes, history_length=0, model_dir="./models
         os.mkdir(model_dir)  
  
     print("... train agent")
-    tensorboard = Evaluation(os.path.join(tensorboard_dir, "train"),"DQN_Agent_carracing", ["episode_reward", "straight", "left", "right", "accel", "brake"])
+    tensorboard = Evaluation(os.path.join(tensorboard_dir, "train_car_dqn"),"DQN_Agent_carracing", ["episode_reward", "straight", "left", "right", "accel", "brake"])
 
     for i in range(num_episodes):
         print("episode %d" % i)
@@ -90,13 +90,15 @@ def train_online(env, agent, num_episodes, history_length=0, model_dir="./models
         
         # scheduler for max time steps
         if i < 100:
-            max_timesteps = 250
-        elif i < 200:
             max_timesteps = 500
+        elif i < 200:
+            agent.epsilon = 0.05
+            max_timesteps = 750
         else:
+            agent.epsilon = 0.01
             max_timesteps = 1000
 
-        stats = run_episode(env, agent, max_timesteps=max_timesteps, skip_frames=5 ,deterministic=False, do_training=True,history_length=history_length)
+        stats = run_episode(env, agent, max_timesteps=max_timesteps, skip_frames=3 ,deterministic=False, do_training=True,history_length=history_length)
 
         tensorboard.write_episode_data(i, eval_dict={ "episode_reward" : stats.episode_reward, 
                                                       "straight" : stats.get_action_usage(STRAIGHT),
@@ -128,7 +130,7 @@ def train_online(env, agent, num_episodes, history_length=0, model_dir="./models
             if stats.episode_reward > best_reward:
                 best_reward = stats.episode_reward
                 agent.save(os.path.join(model_dir, "current_best_carracing_dqn_agent.pt"))
-            agent.save(os.path.join(model_dir, "carracing_dqn_agent.pt"))
+            # agent.save(os.path.join(model_dir, "carracing_dqn_agent.pt"))
 
     tensorboard.close_session()
 
@@ -139,14 +141,14 @@ if __name__ == "__main__":
 
     num_eval_episodes = 5
     eval_cycle = 20
-    history_length = 4
-    batch_size = 64
+    history_length = 2
+    batch_size = 32
     num_actions = 5
     gamma=0.95
     epsilon=0.1
-    tau=0.01
+    tau=0.05
     lr=1e-4
-    num_episodes = 1000
+    num_episodes = 400
     current_reward = -999
                 
     env = gym.make('CarRacing-v0').unwrapped
@@ -156,5 +158,5 @@ if __name__ == "__main__":
     Q = CNN( history_length=history_length, output_classes=num_actions, batch_size=batch_size)
     Q_target = CNN( history_length=history_length, output_classes=5, batch_size=batch_size)
     agent = DQNAgent(Q=Q, Q_target=Q_target, num_actions=num_actions, batch_size=batch_size, gamma=gamma, epsilon=epsilon, tau=tau, lr=lr)
-    train_online(env, agent, num_episodes=100, history_length=history_length, model_dir="./models_carracing", best_reward=current_reward)
+    train_online(env, agent, num_episodes=num_episodes, history_length=history_length, model_dir="./models_carracing", best_reward=current_reward)
 

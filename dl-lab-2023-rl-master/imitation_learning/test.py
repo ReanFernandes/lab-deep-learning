@@ -69,24 +69,17 @@ if __name__ == "__main__":
     # TODO: load agent
     # agent = BCAgent(...)
     # agent.load("models/bc_agent.pt")
-    # get hyperparams from the config file in models/best_model_params.txt. data is in dictionary form
-    hyperparams = json.load(open("models/best_model_params.txt"))
+
+    hyperparams = json.load(open("models/best_model_params_8.txt"))
     history_length = hyperparams["history_length"]
     batch_size = hyperparams["batch_size"]
     lr = hyperparams["lr"]
     
 
-    # dictionary implmented out of the loop to get best std ( used as stopping criterion) and mean
-    results = dict()
-    results["episode_rewards"] = []
-    results["mean"] = 0
-    results["std"] = 1000
     
     agent = BCAgent(history_length=history_length, batch_size=batch_size, lr=lr)
-    agent.load("models/best_model.pt")
+    agent.load("models/best_model_current_8.pt")
     env = gym.make('CarRacing-v0').unwrapped
-    # env = Monitor(env, '/home/rean/lab-deep-learning/results', force=True) For recording video
-    # while True:
     episode_rewards = []
     for i in range(n_test_episodes):
         episode_reward = run_episode(env, agent, rendering=rendering)
@@ -94,16 +87,15 @@ if __name__ == "__main__":
         episode_rewards.append(episode_reward)
 
     # save results in a dictionary and write them into a .json file
-    
+    results = dict()
     results["episode_rewards"] = episode_rewards
     results["mean"] = np.array(episode_rewards).mean()
     results["std"] = np.array(episode_rewards).std()
     print("mean: ", results["mean"])
     print("std: ", results["std"])
-    # if results["std"] < 100:
-    #     break
 
-    fname = "/home/rean/lab-deep-learning/results/results_bc_agent-%s.json" % datetime.now().strftime("%Y%m%d-%H%M%S")
+
+    fname = "results/results_bc_agent-%s.json" % datetime.now().strftime("%Y%m%d-%H%M%S")
     fh = open(fname, "w")
     json.dump(results, fh)
             

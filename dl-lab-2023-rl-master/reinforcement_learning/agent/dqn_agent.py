@@ -106,7 +106,7 @@ class DQNAgent:
             if self.num_actions == 2: #cartpole
                 action_id = np.random.choice(self.num_actions)
             else: #carracing
-                action_id = np.random.choice(self.num_actions, p=[0.2,0.2,0.3,0.3,0.0]) # no braking
+                action_id = np.random.choice(self.num_actions, p=[0.125,0.24,0.16,0.3,0.175])
         return action_id
 
     def save(self, file_name):
