@@ -95,7 +95,7 @@ if __name__ == "__main__":
     print("std: ", results["std"])
 
 
-    fname = "results/results_bc_agent-%s.json" % datetime.now().strftime("%Y%m%d-%H%M%S")
+    fname = "results/results_bc_agent_8-%s.json" % datetime.now().strftime("%Y%m%d-%H%M%S")
     fh = open(fname, "w")
     json.dump(results, fh)
             

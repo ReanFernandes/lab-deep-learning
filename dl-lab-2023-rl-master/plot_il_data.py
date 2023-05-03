@@ -54,8 +54,8 @@ def plot_tensorboard_data(log_dir, tags, output_dir='/home/rean/DL_lab_submissio
             plt.plot(steps, values, label=tag)
         else:
             print(f"Tag '{tag}' not found in log directory.")
-    # plt.title('Accuracy for history_length = 1')
-    plt.title('Loss for history_length = 1')
+    plt.title('Accuracy for history_length = 8')
+    # plt.title('Loss for history_length = 8')
 
     plt.xlabel('Steps')
     plt.ylabel('Values')
@@ -63,7 +63,7 @@ def plot_tensorboard_data(log_dir, tags, output_dir='/home/rean/DL_lab_submissio
 
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
-        output_path = os.path.join(output_dir, 'loss_1.png')
+        output_path = os.path.join(output_dir, 'accu_8.png')
         plt.savefig(output_path)
         print(f"Plot saved to {output_path}")
     else:
@@ -71,8 +71,8 @@ def plot_tensorboard_data(log_dir, tags, output_dir='/home/rean/DL_lab_submissio
 
 
 # Usage example:
-log_dir = 'tensorboard/train_im_learn/DQN_Agent_carracing-20230503-080722'  # Replace with your TensorBoard log directory
-# tags = [ "Training accuracy",  "Validation accuracy"] # Replace with your desired tags
-tags = ["Training loss", "Validation loss"] # Replace with your desired tags
+log_dir = 'tensorboard/train_im_learn/DQN_Agent_carracing-20230503-085429'  # Replace with your TensorBoard log directory
+tags = [ "Training accuracy",  "Validation accuracy"] # Replace with your desired tags
+# tags = ["Training loss", "Validation loss"] # Replace with your desired tags
 
 plot_tensorboard_data(log_dir, tags)
