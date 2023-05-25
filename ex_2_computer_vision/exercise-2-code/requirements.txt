@@ -1,0 +1,12 @@
+opencv-python
+jupyter
+tensorboard
+matplotlib
+
+tqdm  # progressbar
+transformers  # tokenizer
+
+# gpu profiler
+nvidia-ml-py3
+pynvml
+psutil

@@ -1,0 +1,69 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "train_retrieval",
+            "type": "python",
+            "request": "launch",
+            "program": "train_retrieval.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--learning_rate=2e-4",
+                "--weight_decay=1e-5",
+                "--temperature=0.1",
+                "--batch_size=64",
+                "--epochs=10",
+                "--num_workers=16",
+            ],
+            
+            "python": "/home/rean/miniconda3/envs/hf_env/bin/python"
+        },
+        {
+            "name": "eval_retrieval",
+            "type": "python",
+            "request": "launch",
+            "program": "eval_retrieval.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--batch_size=64",
+                "--num_workers=16",
+            ],
+            "python": "/home/rean/miniconda3/envs/hf_env/bin/python"
+        },
+        {
+            "name": "eval_captioning",
+            "type": "python",
+            "request": "launch",
+            "program": "eval_captioning.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--use_topk_sampling",
+                "--temperature=0.01",
+                "--topk=50",
+                "--batch_size=64",
+                "--num_workers=16",
+                "--prompt=A picture of "
+            ],
+            "python": "/home/rean/miniconda3/envs/hf_env/bin/python"
+        },
+        {
+            "name": "train_segmentation.py",
+            "type": "python",
+            "request": "launch",
+            "program": "train_segmentation.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "convolutional",
+                
+            ],
+            "python": "/home/rean/miniconda3/envs/hf_env/bin/python"
+        }
+    ]
+}
