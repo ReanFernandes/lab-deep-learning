@@ -33,7 +33,7 @@ class DQNAgent:
         self.Q_target.load_state_dict(self.Q.state_dict())
 
         # define replay buffer
-        self.replay_buffer = ReplayBuffer(history_length)
+        self.replay_buffer = ReplayBuffer()
 
         # parameters
         self.batch_size = batch_size
@@ -59,6 +59,27 @@ class DQNAgent:
         #       2.2 update the Q network
         #       2.3 call soft update for target network
         #           soft_update(self.Q_target, self.Q, self.tau)
+        
+        self.replay_buffer.add_transition(state, action, next_state, reward, terminal)
+        batch_states, batch_actions, batch_next_states, batch_rewards, batch_dones = self.replay_buffer.next_batch(self.batch_size)
+
+        with torch.no_grad():
+            next_q_vals = self.Q_target(batch_next_states)
+            max_q_vals = next_q_vals.max(dim=1)[0]
+            max_q_vals = max_q_vals.cpu().detach().numpy()
+            td_target = batch_rewards + self.gamma * (max_q_vals) * (1-batch_dones)
+            td_target = torch.tensor(td_target, dtype=torch.float32).cuda()
+        self.optimizer.zero_grad()
+        q_values = self.Q(batch_states)
+        q_values = q_values.gather(1, torch.from_numpy(batch_actions).cuda().unsqueeze(1)).squeeze(1)
+
+        loss = self.loss_function(q_values, td_target)
+        loss.backward()
+        self.optimizer.step()
+        soft_update(self.Q_target, self.Q, self.tau)
+        
+
+            
 
     def act(self, state, deterministic):
         """
@@ -71,17 +92,21 @@ class DQNAgent:
         """
         r = np.random.uniform()
         if deterministic or r > self.epsilon:
-            pass
+            
             # TODO: take greedy action (argmax)
             # action_id = ...
+            action_id = self.Q(state).argmax().item()
         else:
-            pass
+            
             # TODO: sample random action
             # Hint for the exploration in CarRacing: sampling the action from a uniform distribution will probably not work. 
             # You can sample the agents actions with different probabilities (need to sum up to 1) so that the agent will prefer to accelerate or going straight.
             # To see how the agent explores, turn the rendering in the training on and look what the agent is doing.
             # action_id = ...
-
+            if self.num_actions == 2: #cartpole
+                action_id = np.random.choice(self.num_actions)
+            else: #carracing
+                action_id = np.random.choice(self.num_actions, p=[0.125,0.24,0.16,0.3,0.175])
         return action_id
 
     def save(self, file_name):

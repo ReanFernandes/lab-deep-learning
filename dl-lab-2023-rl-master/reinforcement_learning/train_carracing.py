@@ -6,12 +6,13 @@ sys.path.append("../")
 import numpy as np
 import gym
 from tensorboard_evaluation import *
-from utils import EpisodeStats, rgb2gray
+from utils import EpisodeStats, rgb2gray, action_to_id
 from utils import *
 from agent.dqn_agent import DQNAgent
+from agent.networks import CNN
 
 
-def run_episode(env, agent, deterministic, skip_frames=0,  do_training=True, rendering=False, max_timesteps=1000, history_length=0):
+def run_episode(env, agent, deterministic, skip_frames=3,  do_training=True, rendering=False, max_timesteps=1000, history_length=0):
     """
     This methods runs one episode for a gym environment. 
     deterministic == True => agent executes only greedy actions according the Q function approximator (no random actions).
@@ -32,15 +33,16 @@ def run_episode(env, agent, deterministic, skip_frames=0,  do_training=True, ren
     # append image history to first state
     state = state_preprocessing(state)
     image_hist.extend([state] * (history_length + 1))
-    state = np.array(image_hist).reshape(96, 96, history_length + 1)
-    
+    state = np.array(image_hist).reshape(history_length + 1,96, 96 )
+    i=0
     while True:
-
+        i+=1
         # TODO: get action_id from agent
         # Hint: adapt the probabilities of the 5 actions for random sampling so that the agent explores properly. 
         # action_id = agent.act(...)
         # action = your_id_to_action_method(...)
-
+        action_id = agent.act(state=state, deterministic=deterministic)
+        action = id_to_action(action_id)
         # Hint: frame skipping might help you to get better results.
         reward = 0
         for _ in range(skip_frames + 1):
@@ -56,7 +58,7 @@ def run_episode(env, agent, deterministic, skip_frames=0,  do_training=True, ren
         next_state = state_preprocessing(next_state)
         image_hist.append(next_state)
         image_hist.pop(0)
-        next_state = np.array(image_hist).reshape(96, 96, history_length + 1)
+        next_state = np.array(image_hist).reshape(history_length + 1,96, 96 )
 
         if do_training:
             agent.train(state, action_id, next_state, reward, terminal)
@@ -73,20 +75,30 @@ def run_episode(env, agent, deterministic, skip_frames=0,  do_training=True, ren
     return stats
 
 
-def train_online(env, agent, num_episodes, history_length=0, model_dir="./models_carracing", tensorboard_dir="./tensorboard"):
+def train_online(env, agent, num_episodes, history_length=0, model_dir="./models_carracing", tensorboard_dir="./tensorboard",best_reward=-1000):
    
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)  
  
     print("... train agent")
-    tensorboard = Evaluation(os.path.join(tensorboard_dir, "train"), ["episode_reward", "straight", "left", "right", "accel", "brake"])
+    tensorboard = Evaluation(os.path.join(tensorboard_dir, "train_car_dqn"),"DQN_Agent_carracing", ["episode_reward", "straight", "left", "right", "accel", "brake"])
 
     for i in range(num_episodes):
-        print("epsiode %d" % i)
+        print("episode %d" % i)
 
         # Hint: you can keep the episodes short in the beginning by changing max_timesteps (otherwise the car will spend most of the time out of the track)
-       
-        stats = run_episode(env, agent, max_timesteps=max_timesteps, deterministic=False, do_training=True)
+        
+        # scheduler for max time steps
+        if i < 100:
+            max_timesteps = 500
+        elif i < 200:
+            agent.epsilon = 0.05
+            max_timesteps = 750
+        else:
+            agent.epsilon = 0.01
+            max_timesteps = 1000
+
+        stats = run_episode(env, agent, max_timesteps=max_timesteps, skip_frames=3 ,deterministic=False, do_training=True,history_length=history_length)
 
         tensorboard.write_episode_data(i, eval_dict={ "episode_reward" : stats.episode_reward, 
                                                       "straight" : stats.get_action_usage(STRAIGHT),
@@ -103,9 +115,22 @@ def train_online(env, agent, num_episodes, history_length=0, model_dir="./models
         #    for j in range(num_eval_episodes):
         #       ...
 
+        if i % eval_cycle == 0:
+            for j in range(num_eval_episodes):
+                stats = run_episode(env, agent, max_timesteps=max_timesteps, deterministic=True, do_training=False, history_length=history_length)
+                tensorboard.write_episode_data(i + j, eval_dict={ "episode_reward" : stats.episode_reward, 
+                                                                  "straight" : stats.get_action_usage(STRAIGHT),
+                                                                  "left" : stats.get_action_usage(LEFT),
+                                                                  "right" : stats.get_action_usage(RIGHT),
+                                                                  "accel" : stats.get_action_usage(ACCELERATE),
+                                                                  "brake" : stats.get_action_usage(BRAKE)
+                                                                  })
         # store model.
         if i % eval_cycle == 0 or (i >= num_episodes - 1):
-            agent.saver.save(agent.sess, os.path.join(model_dir, "dqn_agent.ckpt")) 
+            if stats.episode_reward > best_reward:
+                best_reward = stats.episode_reward
+                agent.save(os.path.join(model_dir, "current_best_carracing_dqn_agent.pt"))
+            # agent.save(os.path.join(model_dir, "carracing_dqn_agent.pt"))
 
     tensorboard.close_session()
 
@@ -116,11 +141,22 @@ if __name__ == "__main__":
 
     num_eval_episodes = 5
     eval_cycle = 20
-
+    history_length = 2
+    batch_size = 32
+    num_actions = 5
+    gamma=0.95
+    epsilon=0.1
+    tau=0.05
+    lr=1e-4
+    num_episodes = 400
+    current_reward = -999
+                
     env = gym.make('CarRacing-v0').unwrapped
     
     # TODO: Define Q network, target network and DQN agent
     # ...
-    
-    train_online(env, agent, num_episodes=1000, history_length=0, model_dir="./models_carracing")
+    Q = CNN( history_length=history_length, output_classes=num_actions, batch_size=batch_size)
+    Q_target = CNN( history_length=history_length, output_classes=5, batch_size=batch_size)
+    agent = DQNAgent(Q=Q, Q_target=Q_target, num_actions=num_actions, batch_size=batch_size, gamma=gamma, epsilon=epsilon, tau=tau, lr=lr)
+    train_online(env, agent, num_episodes=num_episodes, history_length=history_length, model_dir="./models_carracing", best_reward=current_reward)
 

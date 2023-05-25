@@ -14,8 +14,10 @@ if __name__ == "__main__":
     env = gym.make("CartPole-v0").unwrapped
 
     # TODO: load DQN agent
-    # ...
- 
+    Q = MLP(4, 2)
+    Q_target = MLP(4, 2)
+    agent = DQNAgent(Q, Q_target, 2)
+    agent.load("./models_cartpole/dqn_agent.pt")
     n_test_episodes = 15
 
     episode_rewards = []

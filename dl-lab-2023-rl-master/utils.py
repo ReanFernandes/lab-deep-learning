@@ -23,7 +23,7 @@ def action_to_id(a):
     if all(a == [-1.0, 0.0, 0.0]): return LEFT               # LEFT: 1
     elif all(a == [1.0, 0.0, 0.0]): return RIGHT             # RIGHT: 2
     elif all(a == [0.0, 1.0, 0.0]): return ACCELERATE        # ACCELERATE: 3
-    elif all(a == [0.0, 0.0, 0.2]): return BRAKE             # BRAKE: 4
+    elif all(a == [0.0, 0.0, np.float32(0.2)]): return BRAKE             # BRAKE: 4
     else:       
         return STRAIGHT                                      # STRAIGHT = 0
     # throws error saying truth value is ambiguous, trying other way 
@@ -47,7 +47,7 @@ def id_to_action(action_id, max_speed=0.8):
     elif action_id == ACCELERATE:
         return np.array([0.0, max_speed, 0.0])
     elif action_id == BRAKE:
-        return np.array([0.0, 0.0, 0.1])
+        return np.array([0.0, 0.0, np.float32(0.1)])
     else:
         return np.array([0.0, 0.0, 0.0])
     

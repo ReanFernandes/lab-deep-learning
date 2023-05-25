@@ -97,7 +97,7 @@ if __name__ == "__main__":
             
             state = next_state
             steps += 1
-            time.sleep(0.1)
+            time.sleep(0.02)
             if steps % 1000 == 0 or done:
                 print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
                 print("\nstep {}".format(steps))
