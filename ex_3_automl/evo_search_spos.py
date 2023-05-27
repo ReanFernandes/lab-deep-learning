@@ -259,6 +259,7 @@ class EvolutionSearcher(object):
             cand = cand_iter[i]
             arch = arch_iter[i]
             if not self.is_legal(cand):
+                i+=1
                 continue
             self.candidates.append(cand)
             self.arch_params.append(arch)
@@ -283,10 +284,11 @@ class EvolutionSearcher(object):
             # depth
             if random_s < s_prob: # check is depth is mutated
                 # TODO : sample new depth
-
+                new_depth = random.choice(self.choices["num_layers"])
                 if new_depth > depth:
                   # TODO: sample new number of heads and new mlp ratio for the new layers (new_depth - depth)
-                  raise NotImplementedError
+                    mlp_ratio = mlp_ratio + [random.choice(self.choices['mlp_ratio']) for _ in range(new_depth - depth)]
+                    num_heads = num_heads + [random.choice(self.choices['num_heads']) for _ in range(new_depth - depth)]    
                 else:
                     #remove the last layers (depth - new_depth)
                     mlp_ratio = mlp_ratio[:new_depth]
@@ -298,20 +300,20 @@ class EvolutionSearcher(object):
                 random_s = random.random()
                 if random_s < m_prob:
                     # TODO: sample new mlp ratio for the ith layer
-                    raise NotImplementedError
+                    mlp_ratio[i] = random.choice(self.choices['mlp_ratio'])
 
             # num_heads
             for i in range(depth):
                 random_s = random.random()
                 if random_s < m_prob:
                     # TODO: sample new num heads for the ith layer
-                    raise NotImplementedError
+                    num_heads[i] = random.choice(self.choices['num_heads'])
 
             # embed_dim
             random_s = random.random()
             if random_s < s_prob:
                 # TODO: sample new embedding dimension
-                raise NotImplementedError
+                embed_dim = random.choice(self.choices['embed_dim'])
             # mutated candidate
             result_cand = [depth] + [embed_dim] + num_heads + mlp_ratio
             #print(result_cand)
@@ -326,6 +328,7 @@ class EvolutionSearcher(object):
             cand = cand_iter[i]
             arch = arch_iter[i]
             if not self.is_legal(cand):
+                i += 1
                 continue
             res.append(cand)
             res_arch.append(arch)
@@ -348,13 +351,22 @@ class EvolutionSearcher(object):
             # choose parent 1 (p1) and parent 2 (p2) randomly from top k
             p1 = random.choice(self.keep_top_k[k])
             p2 = random.choice(self.keep_top_k[k])
-            output = None # TODO
+            output = None
             max_iters_tmp = 50
             while len(p1) != len(p2) and max_iters_tmp > 0:
                 max_iters_tmp -= 1
                 # TODO: choose parent 1 (p1) and parent 2 (p2) randomly from top k until they have the same length
-                raise NotImplementedError
+                p1 = random.choice(self.keep_top_k[k])
+                p2 = random.choice(self.keep_top_k[k])
+            
             # TODO: randomly chose the config from p1 and p2 for every architecture choice to form a new config
+            cand_tuple = []
+            for i in range(len(p1)):
+                if random.random() < 0.5:
+                    cand_tuple.append(p1[i])
+                else:
+                    cand_tuple.append(p2[i])
+            output = tuple(cand_tuple)
             arch_param_dict = get_arch_param_from_cand(output, self.choices)
             return output, arch_param_dict
 
@@ -365,6 +377,7 @@ class EvolutionSearcher(object):
             cand = cand_iter[i]
             arch = arch_iter[i]
             if not self.is_legal(cand):
+                i += 1
                 continue
             res_cand.append(cand)
             res_archs.append(arch)

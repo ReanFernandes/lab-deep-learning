@@ -181,7 +181,7 @@ class BigramLanguageModel(nn.Module):
             torch.arange(T).to(idx.device), arch_params_sampled_dict["embed_dim"], self.position_embedding_table_list, self.position_embedding_table)
         x = tok_emb + pos_emb  # (B,T,C)
         depth_output_list = []
-        for i in range(self.num_layers):
+        for i in range(self.max_num_layers):
             x = self.blocks[i](x, i, arch_params_sampled_dict)
             if i+1 in self.choices["num_layers"]:
                 depth_output_list.append(x)
