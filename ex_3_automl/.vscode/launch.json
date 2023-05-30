@@ -8,7 +8,19 @@
             "name": "Evo search",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "${workspaceFolder}/evo_search_spos.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--epochs=100"]
+
+            
+        },
+        {
+            "name": "Random search",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/random_search_spos.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
@@ -16,5 +28,7 @@
 
             
         }
+
+
     ]
 }
