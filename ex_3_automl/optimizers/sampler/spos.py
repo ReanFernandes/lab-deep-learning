@@ -60,11 +60,7 @@ class SPOSSampler(Sampler):
         
         # Check if one_hot has the correct shape 
         if one_hot.shape == alpha.shape:  
-<<<<<<< HEAD
-            #  Return one_hot
-=======
             # If so, we're done! Return one_hot
->>>>>>> c6bc5e308f948925ff1c8434c0abdd2b199068b5
             return one_hot 
         else:
             # Recurse and try again
