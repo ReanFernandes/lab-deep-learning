@@ -20,6 +20,7 @@ class BigramLanguageModel(nn.Module):
         # Note attention does not have any notion of colocation of characters/words and this is important for lms
         self.vocab_size = vocab_size
         self.max_embed_dim = max(choices["embed_dim"])
+        self.max_num_layers = max(choices["num_layers"])
         self.choices = choices
         self.block_size = block_size
         self.dropout = dropout
@@ -180,7 +181,7 @@ class BigramLanguageModel(nn.Module):
             torch.arange(T).to(idx.device), arch_params_sampled_dict["embed_dim"], self.position_embedding_table_list, self.position_embedding_table)
         x = tok_emb + pos_emb  # (B,T,C)
         depth_output_list = []
-        for i in range(self.num_layers):
+        for i in range(self.max_num_layers):
             x = self.blocks[i](x, i, arch_params_sampled_dict)
             if i+1 in self.choices["num_layers"]:
                 depth_output_list.append(x)
