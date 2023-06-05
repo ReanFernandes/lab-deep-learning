@@ -1,0 +1,1 @@
+{'num_layers': 6, 'embed_dim': 96, 'num_heads': [4, 4, 2, 2, 2, 2], 'mlp_ratio': [4, 4, 4, 4, 2, 1]}
